@@ -5,6 +5,7 @@ require "net/https"
 require 'sync/renderer'
 require 'sync/actions'
 require 'sync/controller_helpers'
+require 'sync/partial_cache'
 require 'sync/view_helpers'
 require 'sync/model'
 require 'sync/faye_extension'

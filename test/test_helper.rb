@@ -10,6 +10,8 @@ require_relative 'em_minitest_spec'
 
 Bundler.require(:default)
 
+module Rails; end
+
 def setup_database
   ActiveRecord::Base.send :extend, Sync::Model::ClassMethods
   ActiveRecord::Base.establish_connection(

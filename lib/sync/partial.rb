@@ -27,6 +27,14 @@ module Sync
       context.render(partial: path, locals: locals, formats: [:html])
     end
 
+    def cache_key(key)
+      key
+    end
+
+    def template
+      @template ||= context.find_template(path)
+    end
+
     def sync(action)
       message(action).publish
     end
