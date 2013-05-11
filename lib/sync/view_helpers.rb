@@ -2,13 +2,13 @@ module Sync
 
   module ViewHelpers
 
-    # Surround partial render in script tags, watching for 
+    # Surround partial render in script tags, watching for
     # sync_update and sync_destroy channels from pubsub server
     #
     # options - The Hash of options
     #   partial - The String partial filename without leading underscore
     #   resource - The ActiveModel resource
-    #   collection - The Array of ActiveModel resources to use in place of 
+    #   collection - The Array of ActiveModel resources to use in place of
     #                single resource
     #
     # Examples
@@ -19,10 +19,14 @@ module Sync
       channel      = options[:channel]
       partial_name = options.fetch(:partial, channel)
       collection   = options[:collection] || [options.fetch(:resource)]
-      
-      result = [] 
-      collection.each do |resource|
-        partial = Sync::Partial.new(partial_name, resource, channel, self)
+      cache        = PartialCache.for(options[:cache])
+
+      partials = collection.map { |resource|
+        Sync::Partial.new(partial_name, resource, channel, self)
+      }
+
+      all_results = cache.fetch(partials) do |partial|
+        result = []
         result << "
           <script type='text/javascript' data-sync-id='#{partial.selector_start}'>
             Sync.onReady(function(){
@@ -45,7 +49,7 @@ module Sync
         ".html_safe
       end
 
-      safe_join(result)
+      safe_join(all_results.flatten)
     end
 
     # Setup listener for new resource from sync_new channel, appending
@@ -56,16 +60,16 @@ module Sync
     #   resource - The ActiveModel resource
     #   scope - The ActiveModel resource to scope the new channel publishes to.
     #           Used for restricting new resource publishes to 'owner' models.
-    #           ie, current_user, project, group, etc. When excluded, listens 
+    #           ie, current_user, project, group, etc. When excluded, listens
     #           for global resource creates.
-    # 
+    #
     #   direction - The String/Symbol direction to insert rendered partials.
     #               One of :append, :prepend. Defaults to :append
     #
     # Examples
     #   <%= sync_new partial: 'todo', resource: Todo.new, scope: @project %>
     #   <%= sync_new partial: 'todo', resource: Todo.new, scope: @project, direction: :prepend %>
-    #  
+    #
     def sync_new(options = {})
       partial_name = options.fetch(:partial)
       resource     = options.fetch(:resource)
