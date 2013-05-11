@@ -27,13 +27,21 @@ module Sync
       context.render(partial: path, locals: locals, formats: [:html])
     end
 
-    def cache_key(key)
-      key
+    def cache_key(transform = nil)
+      key = transform ? transform.call(resource.model) : resource.model
+
+      # if defined?(template.fragment_name_with_digest)
+      #   key = template.fragment_name_with_digest(key, template.view_cache_dependencies)
+      # elsif defined?(template.cache_fragment_name)
+      #   key = template.cache_fragment_name(key)
+      # end
+
+      context.controller.fragment_cache_key(key)
     end
 
-    def template
-      @template ||= context.find_template(path)
-    end
+    # def template
+    #   @template ||= context.find_template(path)
+    # end
 
     def sync(action)
       message(action).publish
